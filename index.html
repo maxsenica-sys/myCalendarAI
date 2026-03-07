@@ -787,10 +787,10 @@
   <div class="settings-section">
     <div class="settings-section-title">AI Engine</div>
     <div class="api-section">
-      <div class="api-label">Gemini API Key (Free)</div>
-      <input class="api-input" type="password" id="anthropicKeyInput" placeholder="AIza..." autocomplete="off">
+      <div class="api-label">Anthropic API Key</div>
+      <input class="api-input" type="password" id="anthropicKeyInput" placeholder="sk-ant-..." autocomplete="off">
       <button class="save-btn" onclick="saveAnthropicKey()">Save Key</button>
-      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">Get your free key at <span style="color:var(--accent2)">aistudio.google.com</span> → Get API Key. 1,500 free requests/day. Stored locally only.</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">Get your key at <span style="color:var(--accent2)">console.anthropic.com</span>. $5 top-up lasts months. Stored locally only.</div>
     </div>
   </div>
 
@@ -1074,7 +1074,7 @@ async function processCapture() {
 
   if (!fullText) { showToast('Nothing to process', 'error'); return; }
   if (!state.anthropicKey) {
-    showToast('Add your Gemini API key in Settings', 'error');
+    showToast('Add your Anthropic API key in Settings', 'error');
     switchPage('settings');
     return;
   }
@@ -1124,23 +1124,28 @@ Rules:
 - Be specific with datetime values — infer year/month from context
 - kind "deadline" for things due by a date, "event" for calendar events, "task" for todos, "note" or "idea" for thoughts`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${state.anthropicKey}`, {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 1000, temperature: 0.2 }
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
       })
     });
 
     if (!response.ok) {
       const err = await response.json();
-      const msg = err.error?.message || JSON.stringify(err);
-      throw new Error(msg);
+      throw new Error(err.error?.message || 'API error');
     }
 
     const data = await response.json();
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    const raw = data.content[0].text.trim();
     const clean = raw.replace(/```json\n?|```/g, '').trim();
     const parsed = JSON.parse(clean);
     renderAiResult(parsed, fullText);
