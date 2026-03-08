@@ -381,22 +381,23 @@ textarea.sh-input{resize:none;min-height:80px;line-height:1.55}
 
   <!-- Image mode -->
   <div class="cap-mode-panel" id="panelImage">
-    <div id="imgPreviewWrap" class="img-preview-wrap" style="display:none">
-      <img id="imgPreview" src="" alt="preview"/>
-      <button class="img-clear" onclick="clearImage()">&#215;</button>
-    </div>
-    <input type="file" id="imgFileInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageFile(this)"/>
+    <div id="imgPreviewWrap" style="display:none;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:10px;margin-bottom:10px;display:none;flex-wrap:wrap;gap:4px"></div>
+    <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none" onchange="handleImageFile(this)"/>
+    <input type="file" id="imgCamInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageFile(this)"/>
     <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('imgFileInput').removeAttribute('capture');document.getElementById('imgFileInput').click()">
+      <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('imgFileInput').click()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        Choose Photo
+        Choose Photos
       </button>
-      <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('imgFileInput').setAttribute('capture','environment');document.getElementById('imgFileInput').click()">
+      <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('imgCamInput').click()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         Camera
       </button>
+      <button class="btn btn-ghost" style="padding:11px 10px" onclick="clearImage()" title="Clear all images">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      </button>
     </div>
-    <textarea class="type-input" id="imgContext" placeholder="Optional: add context about this image…" rows="2" style="min-height:48px" oninput="checkProcessBtn()"></textarea>
+    <textarea class="type-input" id="imgContext" placeholder="Optional: add context about these images…" rows="2" style="min-height:48px" oninput="checkProcessBtn()"></textarea>
   </div>
 
   <!-- File mode -->
@@ -698,7 +699,7 @@ function stopMic(){
   document.getElementById('micLbl').textContent='Tap to speak';
   document.getElementById('hdrDot').className='hdr-dot';
   const t=S.transcript.trim(),typed=document.getElementById('typeInput').value.trim();
-  document.getElementById('processBtn').disabled=!(t||typed);
+  checkProcessBtn();
   if(t&&S.anthropicKey)cleanTranscript(t);
 }
 function showRaw(text){
@@ -718,7 +719,7 @@ async function cleanTranscript(raw){
 }
 // ── Capture mode ──────────────────────────────────────────────
 let S_capMode='text';
-let S_imgData=null; // base64 image data
+let S_imgList=[]; // array of {dataUrl, mediaType, b64} objects
 let S_fileText=null; // extracted file text
 
 function setCapMode(mode){
@@ -733,30 +734,48 @@ function setCapMode(mode){
 function checkProcessBtn(){
   let ready=false;
   if(S_capMode==='text') ready=!!(document.getElementById('typeInput').value.trim()||S.transcript.trim());
-  else if(S_capMode==='image') ready=!!S_imgData;
+  else if(S_capMode==='image') ready=S_imgList.length>0;
   else if(S_capMode==='file') ready=!!S_fileText;
   else if(S_capMode==='url') ready=!!(document.getElementById('urlInput').value.trim());
   document.getElementById('processBtn').disabled=!ready;
 }
 
 function handleImageFile(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    S_imgData=e.target.result; // data URL
-    document.getElementById('imgPreview').src=S_imgData;
-    document.getElementById('imgPreviewWrap').style.display='block';
-    checkProcessBtn();
-    toast('Image ready — tap Process with AI','success');
-  };
-  reader.readAsDataURL(file);
+  const files=Array.from(input.files);if(!files.length)return;
+  let loaded=0;
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const dataUrl=e.target.result;
+      const mediaType=dataUrl.split(';')[0].replace('data:','');
+      const b64=dataUrl.split(',')[1];
+      S_imgList.push({dataUrl,mediaType,b64,name:file.name});
+      loaded++;
+      if(loaded===files.length){renderImgPreviews();checkProcessBtn();toast(S_imgList.length+' image'+(S_imgList.length>1?'s':'')+' ready','success');}
+    };
+    reader.readAsDataURL(file);
+  });
 }
+function renderImgPreviews(){
+  const wrap=document.getElementById('imgPreviewWrap');
+  if(!S_imgList.length){wrap.style.display='none';wrap.innerHTML='';return;}
+  wrap.style.display='block';
+  wrap.innerHTML=S_imgList.map((img,i)=>
+    '<div style="position:relative;display:inline-block;margin:4px">'
+    +'<img src="'+img.dataUrl+'" style="width:80px;height:80px;object-fit:cover;border-radius:8px;display:block;border:1.5px solid var(--bdr2)">'
+    +'<button onclick="removeImg('+i+')" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--coral-b);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>'
+    +'</div>'
+  ).join('')
+  +'<div style="font-size:12px;color:var(--text3);margin-top:6px;padding:0 2px">'+S_imgList.length+' image'+(S_imgList.length>1?'s':'')+' selected</div>';
+}
+function removeImg(i){S_imgList.splice(i,1);renderImgPreviews();checkProcessBtn();}
 
 function clearImage(){
-  S_imgData=null;
-  document.getElementById('imgPreview').src='';
-  document.getElementById('imgPreviewWrap').style.display='none';
+  S_imgList=[];
+  const wrap=document.getElementById('imgPreviewWrap');
+  wrap.style.display='none';wrap.innerHTML='';
   document.getElementById('imgFileInput').value='';
+  document.getElementById('imgCamInput').value='';
   checkProcessBtn();
 }
 
@@ -816,17 +835,16 @@ async function processCapture(){
     const basePrompt='You are an intelligent personal assistant. Today is '+dctx+'. Analyse the provided input and extract ALL actionable information. Return ONLY raw JSON, no markdown, no backticks: {"type":"event|note|task|mixed","summary":"one sentence","importance":"high|medium|low","items":[{"kind":"event|task|deadline|idea|note","title":"clear title","detail":"context","datetime":"ISO8601 or null","duration_minutes":60,"location":"location or null","subtasks":["subtask1","subtask2"]}],"noteworthy":true,"note_title":"title","note_content":"expanded note content"}. Rules: Extract EVERY date, time, deadline, task, meeting, idea. Infer subtasks for complex tasks. noteworthy=true for ideas/insights. Return ONLY the JSON.';
     let apiBody,model='claude-haiku-4-5-20251001';
 
-    if(S_capMode==='image'&&S_imgData){
+    if(S_capMode==='image'&&S_imgList.length>0){
       model='claude-sonnet-4-6';
       const ctx=document.getElementById('imgContext').value.trim();
-      const mediaType=S_imgData.split(';')[0].replace('data:','');
-      const b64=S_imgData.split(',')[1];
+      // Build content array: all images first, then instruction text
       const userMsg=[
-        {type:'image',source:{type:'base64',media_type:mediaType,data:b64}},
-        {type:'text',text:basePrompt+(ctx?' User context: '+ctx:'')+' Read ALL visible text, lists, dates, names, amounts, tasks. Extract everything actionable.'}
+        ...S_imgList.map(img=>({type:'image',source:{type:'base64',media_type:img.mediaType,data:img.b64}})),
+        {type:'text',text:basePrompt+(ctx?' User context: '+ctx:'')+' There are '+S_imgList.length+' image(s). Read ALL visible text, lists, dates, names, amounts, tasks in every image. Extract everything actionable from all images combined.'}
       ];
       apiBody={model,max_tokens:1500,messages:[{role:'user',content:userMsg}]};
-      S._lastText='[Image]'+(ctx?' — '+ctx:'');
+      S._lastText='['+S_imgList.length+' image'+(S_imgList.length>1?'s':'')+']'+(ctx?' — '+ctx:'');
 
     } else if(S_capMode==='file'&&S_fileText){
       const ctx=document.getElementById('fileContext').value.trim();
@@ -878,7 +896,7 @@ async function processCapture(){
       parsed={type:typeM?typeM[1]:'note',summary:sumM?sumM[1]:'Captured thought',importance:impM?impM[1]:'medium',items:[],noteworthy:true,note_title:'Captured thought',note_content:raw.replace(/<[^>]+>/g,'').substring(0,500)};
       toast('AI returned partial result — saved as note','info');
     }
-    S._lastParsed=parsed;S._lastText=full;
+    S._lastParsed=parsed;
     colorizeTranscript(parsed);
     renderAiGroups(parsed);
   }catch(e){toast('Error: '+e.message,'error');}
@@ -949,14 +967,14 @@ function saveOneNote(idx){
   S.notes.unshift({id:uid(),title:item.title||'Note',content:item.detail||S._lastText||'',tags:[],importance:S._lastParsed?.importance||'medium',created:new Date().toISOString()});
   saveState();renderNotes();updateBadges();flashBtn(event,'Saved ✓');toast('Note saved! ✓','success');
 }
-function setNoteMode(mode,wrap){S._noteMode=mode;wrap.querySelectorAll('.nmt-btn').forEach(b=>b.classList.remove('nmt-active'));wrap.querySelector('[onclick*="\''+mode+'\'"').classList.add('nmt-active');}
+function setNoteMode(mode,wrap){S._noteMode=mode;const btns=wrap.querySelectorAll('.nmt-btn');btns.forEach((b,i)=>{b.classList.toggle('nmt-active',(i===0&&mode==='one')||(i===1&&mode==='sep'));});}
 function saveGrpNotes(){
   const items=getNoteItems();if(!items.length)return;
   if(S._noteMode==='one'){
     const title=S._lastParsed?.note_title||S._lastParsed?.summary||'Note';
     const content=items.map((item,i)=>(items.length>1?'### '+(item.title||'Section '+(i+1))+'\n':'')+( item.detail||'')).join('\n\n');
     S.notes.unshift({id:uid(),title,content,tags:[],group:'',importance:S._lastParsed?.importance||'medium',created:new Date().toISOString()});
-    saveState();renderNotes();updateBadges();flashBtn(null,'Saved ✓');toast('Saved as one note! ✓','success');
+    saveState();renderNotes();updateBadges();toast('Saved as one note! ✓','success');
   } else {
     items.forEach((_,i)=>saveOneNote(i));
   }
@@ -1049,7 +1067,7 @@ function saveTaskModal(){
   const data={title,datetime:dv?new Date(dv).toISOString():null,priority:document.getElementById('tmPriority').value,category:document.getElementById('tmCat').value,estimate:document.getElementById('tmEst').value,repeat:document.getElementById('tmRepeat').value,notes:document.getElementById('tmNotes').value.trim(),subtasks:[...S._editSubs]};
   if(S._editId){const t=S.tasks.find(x=>x.id===S._editId);if(t)Object.assign(t,data);}
   else{S.tasks.unshift({id:uid(),...data,done:false,created:new Date().toISOString()});}
-  saveState();renderTasks();updateBadges();closeSheet('taskModal');flashSaved('taskModal');toast('Task saved!','success');
+  saveState();renderTasks();updateBadges();closeSheet('taskModal');toast('Task saved! ✓','success');
 }
 function delTaskModal(){if(!S._editId)return;if(!confirm('Delete this task?'))return;S.tasks=S.tasks.filter(t=>t.id!==S._editId);saveState();renderTasks();updateBadges();closeSheet('taskModal');toast('Task deleted','info');}
 
@@ -1141,7 +1159,6 @@ function checkGcalStatus(){const badge=document.getElementById('gcalStatusBadge'
 async function pushGcal(item){if(!S.gcalToken)return;try{const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;let start,end;if(item.datetime){const s=new Date(item.datetime),e=new Date(s.getTime()+(item.duration_minutes||60)*60000);start={dateTime:s.toISOString(),timeZone:tz};end={dateTime:e.toISOString(),timeZone:tz};}else{const t=new Date().toISOString().split('T')[0];start={date:t};end={date:t};}const body={summary:item.title,description:item.detail||'',start,end};if(item.location)body.location=item.location;const r=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{method:'POST',headers:{'Authorization':'Bearer '+S.gcalToken,'Content-Type':'application/json'},body:JSON.stringify(body)});if(r.status===401){S.gcalToken=null;saveState();checkGcalStatus();}}catch(e){}}
 
 /* NOTES */
-function saveNote_fromCapture(){const p=S._lastParsed;if(!p)return;S.notes.unshift({id:uid(),title:p.note_title||p.summary||'Note',content:p.note_content||S._lastText||'',tags:[],importance:p.importance||'medium',created:new Date().toISOString()});saveState();renderNotes();updateBadges();flashBtn(event,'Saved ✓');toast('Note saved! ✓','success');}
 function setNF(g,btn){S._noteGrpF=g;document.querySelectorAll('#notesFilterRow .fp').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderNotes();}
 function renderNotes(filter){
   const list=document.getElementById('notesList');
@@ -1200,7 +1217,7 @@ function toast(msg,type){const t=document.getElementById('toast');t.textContent=
 /* SERVICE WORKER — auto cache-bust on every deploy */
 function swSetup(){
   if(!('serviceWorker' in navigator))return;
-  const VER='captureai-v7';
+  const VER='captureai-v9';
   const SW='const C="'+VER+'";self.addEventListener("install",e=>{self.skipWaiting();});self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).then(res=>{const cl=res.clone();caches.open(C).then(c=>c.put(e.request,cl));return res;}).catch(()=>caches.match(e.request)));});';
   const blob=new Blob([SW],{type:'application/javascript'});
   const url=URL.createObjectURL(blob);
