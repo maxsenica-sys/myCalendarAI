@@ -105,7 +105,7 @@ input,textarea,select{font-family:inherit;cursor:text}
 .clear-btn{font-size:11px;font-weight:600;color:var(--ocean-mid);background:none;border:none;padding:2px 6px;border-radius:6px;cursor:pointer}
 .clear-btn:active{background:var(--ocean-pale);color:var(--ocean)}
 
-.type-input{width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;color:var(--text);font-size:15px;resize:none;outline:none;transition:border-color .2s,box-shadow .2s;min-height:68px;margin-bottom:10px;display:block;box-shadow:var(--sh)}
+.type-input{width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;color:var(--text);font-size:15px;resize:none;outline:none;transition:border-color .2s,box-shadow .2s;min-height:68px;margin-bottom:10px;display:block;box-shadow:var(--sh)}.cap-input-modes{display:flex;gap:6px;margin-bottom:10px}.cim-btn{flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--surf);color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s}.cim-btn.active{border-color:var(--ocean);background:var(--ocean-pale);color:var(--ocean)}.cim-btn svg{width:16px;height:16px}.cap-mode-panel{display:none}.cap-mode-panel.active{display:block}.img-preview-wrap{position:relative;margin-bottom:10px;border-radius:var(--r);overflow:hidden;background:var(--bg);border:1px solid var(--bdr)}.img-preview-wrap img{width:100%;max-height:220px;object-fit:contain;display:block}.img-preview-wrap .img-clear{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:none;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}.url-input{width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:10px;display:block;box-shadow:var(--sh)}.url-input:focus{border-color:var(--ocean-l);box-shadow:0 0 0 3px rgba(14,90,180,.1),var(--sh)}.file-drop{width:100%;min-height:90px;border:2px dashed var(--bdr);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;margin-bottom:10px;transition:all .2s;background:var(--surf)}.file-drop.has-file{border-color:var(--ocean);background:var(--ocean-pale)}.file-drop svg{width:24px;height:24px;color:var(--text3)}.file-drop span{font-size:13px;color:var(--text3);font-weight:600}.file-drop.has-file span{color:var(--ocean)}
 .type-input:focus{border-color:var(--ocean-l);box-shadow:0 0 0 3px rgba(14,90,180,.1),var(--sh)}
 .type-input::placeholder{color:var(--muted)}
 .process-btn{width:100%;padding:15px;border-radius:var(--r);border:none;background:var(--ocean);color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;box-shadow:0 4px 16px rgba(14,90,180,.3);transition:all .2s}
@@ -354,7 +354,66 @@ textarea.sh-input{resize:none;min-height:80px;line-height:1.55}
     <div class="transcript-body" id="transcriptBody"><span class="t-ph">Your words will appear here, colour-coded by type…</span></div>
   </div>
 
-  <textarea class="type-input" id="typeInput" placeholder="Or type your thoughts here…" rows="3"></textarea>
+  <!-- Input mode switcher -->
+  <div class="cap-input-modes">
+    <button class="cim-btn active" id="modeText" onclick="setCapMode('text')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+      Text
+    </button>
+    <button class="cim-btn" id="modeImage" onclick="setCapMode('image')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Photo
+    </button>
+    <button class="cim-btn" id="modeFile" onclick="setCapMode('file')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      File
+    </button>
+    <button class="cim-btn" id="modeUrl" onclick="setCapMode('url')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      URL
+    </button>
+  </div>
+
+  <!-- Text mode -->
+  <div class="cap-mode-panel active" id="panelText">
+    <textarea class="type-input" id="typeInput" placeholder="Or type your thoughts here…" rows="3"></textarea>
+  </div>
+
+  <!-- Image mode -->
+  <div class="cap-mode-panel" id="panelImage">
+    <div id="imgPreviewWrap" class="img-preview-wrap" style="display:none">
+      <img id="imgPreview" src="" alt="preview"/>
+      <button class="img-clear" onclick="clearImage()">&#215;</button>
+    </div>
+    <input type="file" id="imgFileInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageFile(this)"/>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('imgFileInput').removeAttribute('capture');document.getElementById('imgFileInput').click()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Choose Photo
+      </button>
+      <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('imgFileInput').setAttribute('capture','environment');document.getElementById('imgFileInput').click()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Camera
+      </button>
+    </div>
+    <textarea class="type-input" id="imgContext" placeholder="Optional: add context about this image…" rows="2" style="min-height:48px" oninput="checkProcessBtn()"></textarea>
+  </div>
+
+  <!-- File mode -->
+  <div class="cap-mode-panel" id="panelFile">
+    <input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.pdf" style="display:none" onchange="handleFileInput(this)"/>
+    <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span id="fileDropLabel">Tap to select a file (.txt .md .csv .json)</span>
+    </div>
+    <textarea class="type-input" id="fileContext" placeholder="Optional: what should AI focus on in this file?" rows="2" style="min-height:48px" oninput="checkProcessBtn()"></textarea>
+  </div>
+
+  <!-- URL mode -->
+  <div class="cap-mode-panel" id="panelUrl">
+    <input class="url-input" id="urlInput" type="url" placeholder="Paste a URL to analyse…" oninput="checkProcessBtn()"/>
+    <textarea class="type-input" id="urlContext" placeholder="Optional: what should AI extract from this page?" rows="2" style="min-height:48px" oninput="checkProcessBtn()"></textarea>
+  </div>
 
   <button class="process-btn" id="processBtn" onclick="processCapture()" disabled>
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -589,9 +648,7 @@ function init(){
   const ki=document.getElementById('anthropicKeyInput'),ci=document.getElementById('gcalClientIdInput');
   if(ki&&S.anthropicKey)ki.value=S.anthropicKey;
   if(ci&&S.gcalClientId)ci.value=S.gcalClientId;
-  document.getElementById('typeInput').addEventListener('input',function(){
-    document.getElementById('processBtn').disabled=!(this.value.trim()||S.transcript.trim());
-  });
+  document.getElementById('typeInput').addEventListener('input',checkProcessBtn);
   swSetup();
 }
 function loadState(){const OLD=['captureai_v5','captureai_v4','captureai_v3','captureai_v2','captureai_v1'];try{let r=localStorage.getItem(SK);if(!r){for(const k of OLD){r=localStorage.getItem(k);if(r){localStorage.setItem(SK,r);localStorage.removeItem(k);break;}}}if(r){const d=JSON.parse(r);S.notes=d.notes||[];S.events=d.events||[];S.tasks=d.tasks||[];S.anthropicKey=d.anthropicKey||'';S.gcalClientId=d.gcalClientId||'';S.gcalToken=d.gcalToken||null;}}catch(e){}}
@@ -659,10 +716,79 @@ async function cleanTranscript(raw){
     if(cleaned){S.transcript=cleaned;showRaw(cleaned);}
   }catch(e){}
 }
+// ── Capture mode ──────────────────────────────────────────────
+let S_capMode='text';
+let S_imgData=null; // base64 image data
+let S_fileText=null; // extracted file text
+
+function setCapMode(mode){
+  S_capMode=mode;
+  ['text','image','file','url'].forEach(m=>{
+    document.getElementById('mode'+m.charAt(0).toUpperCase()+m.slice(1)).classList.toggle('active',m===mode);
+    document.getElementById('panel'+m.charAt(0).toUpperCase()+m.slice(1)).classList.toggle('active',m===mode);
+  });
+  checkProcessBtn();
+}
+
+function checkProcessBtn(){
+  let ready=false;
+  if(S_capMode==='text') ready=!!(document.getElementById('typeInput').value.trim()||S.transcript.trim());
+  else if(S_capMode==='image') ready=!!S_imgData;
+  else if(S_capMode==='file') ready=!!S_fileText;
+  else if(S_capMode==='url') ready=!!(document.getElementById('urlInput').value.trim());
+  document.getElementById('processBtn').disabled=!ready;
+}
+
+function handleImageFile(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    S_imgData=e.target.result; // data URL
+    document.getElementById('imgPreview').src=S_imgData;
+    document.getElementById('imgPreviewWrap').style.display='block';
+    checkProcessBtn();
+    toast('Image ready — tap Process with AI','success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage(){
+  S_imgData=null;
+  document.getElementById('imgPreview').src='';
+  document.getElementById('imgPreviewWrap').style.display='none';
+  document.getElementById('imgFileInput').value='';
+  checkProcessBtn();
+}
+
+function handleFileInput(input){
+  const file=input.files[0];if(!file)return;
+  document.getElementById('fileDropLabel').textContent='Reading: '+file.name+'…';
+  const reader=new FileReader();
+  reader.onload=function(e){
+    S_fileText=e.target.result;
+    document.getElementById('fileDrop').classList.add('has-file');
+    document.getElementById('fileDropLabel').textContent='✓ '+file.name+' ('+Math.round(S_fileText.length/1000)+'kb)';
+    checkProcessBtn();
+    toast('File ready — tap Process with AI','success');
+  };
+  reader.onerror=function(){toast('Could not read file','error');};
+  reader.readAsText(file);
+}
+
 function clearCapture(){
   S.transcript='';S._lastParsed=null;S._lastText='';
   showRaw('');document.getElementById('typeInput').value='';
   document.getElementById('aiGroupsWrap').innerHTML='';
+  // reset all input modes
+  clearImage();
+  S_fileText=null;
+  document.getElementById('fileDrop').classList.remove('has-file');
+  document.getElementById('fileDropLabel').textContent='Tap to select a file (.txt .md .csv .json)';
+  document.getElementById('fileInput').value='';
+  document.getElementById('urlInput').value='';
+  document.getElementById('imgContext').value='';
+  document.getElementById('fileContext').value='';
+  document.getElementById('urlContext').value='';
   document.getElementById('processBtn').disabled=true;
 }
 function colorizeTranscript(parsed){
@@ -679,9 +805,6 @@ function colorizeTranscript(parsed){
 
 /* AI PROCESSING */
 async function processCapture(){
-  const typed=document.getElementById('typeInput').value.trim();
-  const full=(S.transcript+' '+typed).trim();
-  if(!full){toast('Nothing to process','error');return;}
   if(!S.anthropicKey){toast('Add your API key in Settings','error');switchPage('settings');return;}
   const btn=document.getElementById('processBtn');
   btn.innerHTML='<div class="spinner"></div>&nbsp;Thinking…';btn.disabled=true;
@@ -690,14 +813,71 @@ async function processCapture(){
   try{
     const now=new Date();
     const dctx=now.toLocaleDateString('en-AU',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' '+now.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
-    const prompt='You are an intelligent personal assistant. Today is '+dctx+'.\n\nAnalyse this voice capture and extract ALL information:\n"'+full+'"\n\nReturn ONLY raw JSON, no markdown, no backticks:\n{"type":"event|note|task|mixed","summary":"one sentence","importance":"high|medium|low","items":[{"kind":"event|task|deadline|idea|note","title":"clear title","detail":"context","datetime":"ISO8601 or null","duration_minutes":60,"location":"location or null","subtasks":["subtask1","subtask2"]}],"noteworthy":true,"note_title":"title","note_content":"expanded note content"}\n\nRules: Extract EVERY date, time, deadline, task, meeting, idea. Infer subtasks for complex tasks. noteworthy=true for ideas/insights. Return ONLY the JSON.';
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    const basePrompt='You are an intelligent personal assistant. Today is '+dctx+'. Analyse the provided input and extract ALL actionable information. Return ONLY raw JSON, no markdown, no backticks: {"type":"event|note|task|mixed","summary":"one sentence","importance":"high|medium|low","items":[{"kind":"event|task|deadline|idea|note","title":"clear title","detail":"context","datetime":"ISO8601 or null","duration_minutes":60,"location":"location or null","subtasks":["subtask1","subtask2"]}],"noteworthy":true,"note_title":"title","note_content":"expanded note content"}. Rules: Extract EVERY date, time, deadline, task, meeting, idea. Infer subtasks for complex tasks. noteworthy=true for ideas/insights. Return ONLY the JSON.';
+    let apiBody,model='claude-haiku-4-5-20251001';
+
+    if(S_capMode==='image'&&S_imgData){
+      model='claude-sonnet-4-6';
+      const ctx=document.getElementById('imgContext').value.trim();
+      const mediaType=S_imgData.split(';')[0].replace('data:','');
+      const b64=S_imgData.split(',')[1];
+      const userMsg=[
+        {type:'image',source:{type:'base64',media_type:mediaType,data:b64}},
+        {type:'text',text:basePrompt+(ctx?' User context: '+ctx:'')+' Read ALL visible text, lists, dates, names, amounts, tasks. Extract everything actionable.'}
+      ];
+      apiBody={model,max_tokens:1500,messages:[{role:'user',content:userMsg}]};
+      S._lastText='[Image]'+(ctx?' — '+ctx:'');
+
+    } else if(S_capMode==='file'&&S_fileText){
+      const ctx=document.getElementById('fileContext').value.trim();
+      const truncated=S_fileText.substring(0,8000);
+      apiBody={model,max_tokens:1500,messages:[{role:'user',content:basePrompt+'\n\nFile contents:\n'+truncated+(ctx?'\nFocus: '+ctx:'')}]};
+      S._lastText='[File]';
+
+    } else if(S_capMode==='url'){
+      const url=document.getElementById('urlInput').value.trim();
+      if(!url){toast('Enter a URL','error');resetProcessBtn();return;}
+      const ctx=document.getElementById('urlContext').value.trim();
+      btn.innerHTML='<div class="spinner"></div>&nbsp;Fetching…';
+      let pageText='';
+      try{
+        const pr=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url));
+        const pd=await pr.json();
+        pageText=(pd.contents||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').substring(0,6000);
+      }catch(fe){pageText='Could not fetch — URL: '+url;}
+      btn.innerHTML='<div class="spinner"></div>&nbsp;Thinking…';
+      apiBody={model,max_tokens:1500,messages:[{role:'user',content:basePrompt+'\nURL: '+url+'\nContent:\n'+pageText+(ctx?'\nFocus: '+ctx:'')}]};
+      S._lastText='[URL: '+url+']';
+
+    } else {
+      const typed=document.getElementById('typeInput').value.trim();
+      const full=(S.transcript+' '+typed).trim();
+      if(!full){toast('Nothing to process','error');resetProcessBtn();return;}
+      S._lastText=full;
+      apiBody={model,max_tokens:1200,messages:[{role:'user',content:basePrompt+'\n\nCapture: "'+full+'"'}]};
+    }
+
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(apiBody)});
     if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'API error '+r.status);}
     const d=await r.json();
     let raw=(d.content[0].text||'').trim().replace(/^```[\w]*\n?/,'').replace(/```$/,'').trim();
+    // Robust JSON extraction — strip any wrapper text, fix common AI formatting issues
+    raw=raw.replace(/^[^{["]*/,'').replace(/[^}\]"]*$/,'').trim();
     const s=raw.indexOf('{'),e2=raw.lastIndexOf('}');
-    if(s===-1)throw new Error('No JSON returned');
-    const parsed=JSON.parse(raw.slice(s,e2+1));
+    if(s===-1)throw new Error('No JSON returned from AI');
+    let jsonStr=raw.slice(s,e2+1);
+    // Fix unescaped newlines inside strings that break JSON.parse
+    jsonStr=jsonStr.replace(/[\x00-\x1f\x7f]/g,' ');
+    let parsed;
+    try{parsed=JSON.parse(jsonStr);}
+    catch(je){
+      // Last resort: try to extract just the structure we need
+      const typeM=jsonStr.match(/"type"\s*:\s*"([^"]+)"/);
+      const sumM=jsonStr.match(/"summary"\s*:\s*"([^"]+)"/);
+      const impM=jsonStr.match(/"importance"\s*:\s*"([^"]+)"/);
+      parsed={type:typeM?typeM[1]:'note',summary:sumM?sumM[1]:'Captured thought',importance:impM?impM[1]:'medium',items:[],noteworthy:true,note_title:'Captured thought',note_content:raw.replace(/<[^>]+>/g,'').substring(0,500)};
+      toast('AI returned partial result — saved as note','info');
+    }
     S._lastParsed=parsed;S._lastText=full;
     colorizeTranscript(parsed);
     renderAiGroups(parsed);
@@ -1004,6 +1184,7 @@ function updateBadges(){
 }
 
 /* UTILS */
+function resetProcessBtn(){const btn=document.getElementById('processBtn');btn.disabled=false;btn.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Process with AI';}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
 function flashBtn(e,label){
   if(!e||!e.target)return;
@@ -1019,7 +1200,7 @@ function toast(msg,type){const t=document.getElementById('toast');t.textContent=
 /* SERVICE WORKER — auto cache-bust on every deploy */
 function swSetup(){
   if(!('serviceWorker' in navigator))return;
-  const VER='captureai-v4';
+  const VER='captureai-v7';
   const SW='const C="'+VER+'";self.addEventListener("install",e=>{self.skipWaiting();});self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).then(res=>{const cl=res.clone();caches.open(C).then(c=>c.put(e.request,cl));return res;}).catch(()=>caches.match(e.request)));});';
   const blob=new Blob([SW],{type:'application/javascript'});
   const url=URL.createObjectURL(blob);
