@@ -1019,7 +1019,7 @@ function toast(msg,type){const t=document.getElementById('toast');t.textContent=
 /* SERVICE WORKER — auto cache-bust on every deploy */
 function swSetup(){
   if(!('serviceWorker' in navigator))return;
-  const VER='captureai-'+document.documentElement.innerHTML.length;
+  const VER='captureai-v4';
   const SW='const C="'+VER+'";self.addEventListener("install",e=>{self.skipWaiting();});self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).then(res=>{const cl=res.clone();caches.open(C).then(c=>c.put(e.request,cl));return res;}).catch(()=>caches.match(e.request)));});';
   const blob=new Blob([SW],{type:'application/javascript'});
   const url=URL.createObjectURL(blob);
