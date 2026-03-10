@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f0f6ff">
-<title>CaptureAI</title>
+<title>Corra</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -206,6 +206,9 @@ input,textarea,select{font-family:inherit;cursor:text}
 .cday.sel{background:var(--ocean)!important;color:#fff!important;font-weight:700}
 .cday.hev::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--ocean-l)}
 .cday.sel.hev::after{background:rgba(255,255,255,.7)}
+.cday.past{color:var(--coral-b);font-weight:600}
+.cday.past.hev::after{background:var(--coral-b)}
+.cday.past.hev{background:var(--coral-pale)}
 
 .cal-action-row{display:flex;gap:8px;margin-bottom:14px}
 .cal-act-btn{flex:1;padding:10px;border-radius:var(--rs);border:1.5px solid var(--bdr2);background:var(--surf);color:var(--text2);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;cursor:pointer}
@@ -324,7 +327,7 @@ textarea.sh-input{resize:none;min-height:80px;line-height:1.55}
 <body>
 
 <div class="hdr">
-  <div class="logo">Capture<b>AI</b></div>
+  <div class="logo">Cor<b>ra</b></div>
   <div class="hdr-r"><div class="hdr-date" id="hdrDate"></div><div class="hdr-dot" id="hdrDot"></div></div>
 </div>
 
@@ -525,7 +528,7 @@ textarea.sh-input{resize:none;min-height:80px;line-height:1.55}
       <div class="s-row" onclick="clearAll()"><div class="s-rl"><div class="s-icon si-c">🗑️</div><div><div class="s-label">Clear All Data</div><div class="s-sub">Permanently delete everything</div></div></div><div class="s-rr" style="color:var(--coral-b)">›</div></div>
     </div>
   </div>
-  <div style="text-align:center;padding:10px 0 4px;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.08em">CAPTUREAI v3 · POWERED BY CLAUDE</div>
+  <div style="text-align:center;padding:10px 0 4px;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.08em">CORRA · POWERED BY CLAUDE</div>
 </div>
 </div><!-- /scroll -->
 
@@ -1087,7 +1090,8 @@ function renderMiniCal(){
     const iT=d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear();
     const iS=S._calDay&&S._calDay.d===d&&S._calDay.m===m&&S._calDay.y===y;
     const hE=evDays.has(d);
-    let cls='cday';if(iT)cls+=' tod';if(iS)cls+=' sel';if(hE)cls+=' hev';
+    const isPast=new Date(y,m,d)<today&&!iT;
+    let cls='cday';if(iT)cls+=' tod';if(iS)cls+=' sel';if(hE)cls+=' hev';if(isPast&&hE)cls+=' past';
     grid.innerHTML+='<div class="'+cls+'" onclick="selDay('+d+','+m+','+y+')">'+d+'</div>';
   }
   const rem=(fd+dim)%7;if(rem>0)for(let d=1;d<=7-rem;d++)grid.innerHTML+='<div class="cday om">'+d+'</div>';
@@ -1217,7 +1221,7 @@ function toast(msg,type){const t=document.getElementById('toast');t.textContent=
 /* SERVICE WORKER — auto cache-bust on every deploy */
 function swSetup(){
   if(!('serviceWorker' in navigator))return;
-  const VER='captureai-v9';
+  const VER='corra-v1';
   const SW='const C="'+VER+'";self.addEventListener("install",e=>{self.skipWaiting();});self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).then(res=>{const cl=res.clone();caches.open(C).then(c=>c.put(e.request,cl));return res;}).catch(()=>caches.match(e.request)));});';
   const blob=new Blob([SW],{type:'application/javascript'});
   const url=URL.createObjectURL(blob);
